@@ -25,7 +25,7 @@ type ShoppingCartUpdater interface {
 type ShoppingCarts interface {
 	ShoppingCartsFinder
 	ShoppingCartUpdater
-	Publish(shared.DomainEvent)
+	shared.Handler
 }
 
 type shoppingCartsImpl struct {
@@ -58,10 +58,11 @@ func (shoppingCarts *shoppingCartsImpl) Update(shoppingCart ShoppingCart) (Shopp
 
 func (shoppingCarts *shoppingCartsImpl) New() ShoppingCart {
 	shoppingCart := NewShoppingCart()
-	shoppingCarts.Publish(event.NewNewEvent(shoppingCart))
+	shoppingCarts.Handle(event.NewNewEvent(shoppingCart.ID))
 	return shoppingCart
 }
 
-func (shoppingCarts *shoppingCartsImpl) Publish(event shared.DomainEvent, error) {
+func (shoppingCarts *shoppingCartsImpl) Handle(event shared.DomainEvent) error {
 	shoppingCarts.eventBus.Publish(event)
+	return nil
 }

@@ -28,10 +28,10 @@ func buildWebServer(context2 context.Context) (WebServer, error) {
 		return WebServer{}, err
 	}
 	shoppingCartReadRepo := infrastructure2.NewShoppingCartReadRepo(database)
-	shoppingCartWriteRepo := infrastructure2.NewShoppingCartWriteRepo(database)
 	eventBus := event.NewEventBus()
+	shoppingCartWriteRepo := infrastructure2.NewShoppingCartWriteRepo(database, eventBus)
 	shoppingCarts := domain.NewShoppingCarts(shoppingCartReadRepo, shoppingCartWriteRepo, eventBus)
-	openAndSave := open_save.NewOpenAndSave(shoppingCarts, eventBus)
+	openAndSave := open_save.NewOpenAndSave(shoppingCarts)
 	sendingShoppingCart := send.NewSendingShoppingCart(shoppingCarts, eventBus)
 	checkoutShoppingCart := checkout.NewCheckoutShoppingCart()
 	shoppingCartsWebHandlers := web.NewShopingCartsWebHanders(openAndSave, sendingShoppingCart, checkoutShoppingCart, shoppingCarts)

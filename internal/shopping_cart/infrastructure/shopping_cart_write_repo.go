@@ -4,8 +4,6 @@ import (
 	sharedEvent "ddd/internal/shared/event"
 	shared "ddd/internal/shared/infrastructure"
 	"ddd/internal/shopping_cart/domain"
-	"ddd/internal/shopping_cart/event"
-	"log"
 )
 
 type ShoppingCartWriteRepo interface {
@@ -23,7 +21,6 @@ func NewShoppingCartWriteRepo(database shared.Database, bus sharedEvent.EventBus
 		database: database,
 		bus:      bus,
 	}
-	bus.Subscribe(event.NewNewEvent(domain.NewShoppingCart()), repo)
 	return repo
 }
 
@@ -36,7 +33,6 @@ func (writer *shoppingCartWriteRepoImpl) Update(domain.ShoppingCart) (domain.Sho
 }
 
 func (writer *shoppingCartWriteRepoImpl) Handle(e sharedEvent.DomainEvent) error {
-	log.Println("receive event ", e)
 	switch e.GetType() {
 	}
 	return nil

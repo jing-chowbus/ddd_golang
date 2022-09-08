@@ -2,7 +2,6 @@ package open_save
 
 import (
 	"ddd/internal/shopping_cart/domain"
-	"ddd/internal/shopping_cart/event"
 )
 
 type OpenAndSave interface {
@@ -32,10 +31,5 @@ func (openAndSave *openAndSaveImpl) Save(command SaveCommand) (domain.ShoppingCa
 		return shoppingCart, err
 	}
 	saved, err = openAndSave.shoppingCarts.Update(shoppingCart.Merge(saved))
-	if err != nil {
-		openAndSave.eventBus.Publish(event.NewSaveFailedEvent(saved.ID, err))
-		return saved, err
-	}
-	openAndSave.eventBus.Publish(event.NewSaveSuccessEvent(saved.ID))
 	return saved, err
 }
