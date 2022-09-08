@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"ddd/internal/shared/event"
 	shared "ddd/internal/shared/event"
 	"ddd/internal/shared/value"
+	"ddd/internal/shopping_cart/event"
 
 	"github.com/google/uuid"
 )
@@ -14,7 +14,7 @@ type ShoppingCartsQuery struct {
 
 type ShoppingCartsFinder interface {
 	FindByID(uuid.UUID) (ShoppingCart, error)
-	FindByQuery(ShoppingCartsQuery) ([]ShoppingCart, error)
+	FindByQuery(ShoppingCartsQuery) ([]ShoppingCart, int64, error)
 }
 
 type ShoppingCartUpdater interface {
@@ -25,7 +25,7 @@ type ShoppingCartUpdater interface {
 type ShoppingCarts interface {
 	ShoppingCartsFinder
 	ShoppingCartUpdater
-	Notify(shared.DomainEvent) error
+	Publish(shared.DomainEvent)
 }
 
 type shoppingCartsImpl struct {
@@ -47,7 +47,7 @@ func (shoppingCarts *shoppingCartsImpl) FindByID(id uuid.UUID) (ShoppingCart, er
 	return shoppingCarts.finder.FindByID(id)
 }
 
-func (shoppingCarts *shoppingCartsImpl) FindByQuery(query ShoppingCartsQuery) ([]ShoppingCart, error) {
+func (shoppingCarts *shoppingCartsImpl) FindByQuery(query ShoppingCartsQuery) ([]ShoppingCart, int64, error) {
 	return shoppingCarts.finder.FindByQuery(query)
 }
 
@@ -57,9 +57,11 @@ func (shoppingCarts *shoppingCartsImpl) Update(shoppingCart ShoppingCart) (Shopp
 }
 
 func (shoppingCarts *shoppingCartsImpl) New() ShoppingCart {
-	return NewShoppingCart()
+	shoppingCart := NewShoppingCart()
+	shoppingCarts.Publish(event.NewNewEvent(shoppingCart))
+	return shoppingCart
 }
 
-func (shoppingCarts *shoppingCartsImpl) Notify(event event.DomainEvent) error {
-	return shoppingCarts.eventBus.Notify(event)
+func (shoppingCarts *shoppingCartsImpl) Publish(event shared.DomainEvent, error) {
+	shoppingCarts.eventBus.Publish(event)
 }

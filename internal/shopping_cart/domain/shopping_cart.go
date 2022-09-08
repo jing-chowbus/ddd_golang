@@ -10,7 +10,7 @@ import (
 
 type ShoppingCart struct {
 	ID               uuid.UUID
-	Items            []sharedEntity.LineItem
+	Items            entity.LineItems
 	PretaxDiscounts  []sharedEntity.Discount
 	PretaxFees       []sharedEntity.Fee
 	PosttaxDiscounts []sharedEntity.Discount

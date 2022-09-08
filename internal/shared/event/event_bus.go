@@ -1,62 +1,45 @@
 package event
 
-import (
-	"ddd/internal/shared/exceptoins"
-	"sync"
-)
-
-type Subscriber interface {
-	Subscribe(EventType, Handler) error
-}
-
-type Notifier interface {
-	Notify(DomainEvent) error
-	NotifyAll([]DomainEvent) error
-}
+import eBus "github.com/asaskevich/EventBus"
 
 type Handler interface {
-	handle(DomainEvent) error
+	Handle(DomainEvent) error
 }
 
 type EventBus interface {
-	Notifier
-	Subscriber
+	Publish(DomainEvent)
+	Subscribe(DomainEvent, Handler) error
+	SubscribeAsync(DomainEvent, Handler) error
+	SubscribeOnce(DomainEvent, Handler) error
+	Unsubscribe(DomainEvent, Handler) error
 }
 
 type eventBusImpl struct {
-	mu          sync.Mutex
-	subscribers map[EventType][]Handler
+	inner eBus.Bus
 }
 
-func (bus *eventBusImpl) Notify(event DomainEvent) error {
-	handlers := bus.subscribers[event.GetType()]
-	for _, handler := range handlers {
-		if err := handler.handle(event); err != nil {
-			return err
-		}
+func NewEventBus() EventBus {
+	return &eventBusImpl{
+		inner: eBus.New(),
 	}
-	return nil
 }
 
-func (bus *eventBusImpl) NotifyAll(events []DomainEvent) error {
-	for _, event := range events {
-		if err := bus.Notify(event); err != nil {
-			return err
-		}
-	}
-	return nil
+func (bus *eventBusImpl) Publish(event DomainEvent) {
+	bus.inner.Publish(string(event.GetType()), event)
 }
 
-func (bus *eventBusImpl) Subscribe(event DomainEvent, handler Handler) error {
-	locked := bus.mu.TryLock()
-	if !locked {
-		return exceptoins.SystemException{}
-	}
-	defer bus.mu.Unlock()
-	if handlers, ok := bus.subscribers[event.GetType()]; !ok {
-		bus.subscribers[event.GetType()] = []Handler{handler}
-	} else {
-		bus.subscribers[event.GetType()] = append(handlers, handler)
-	}
-	return nil
+func (bus *eventBusImpl) Subscribe(event DomainEvent, hander Handler) error {
+	return bus.inner.Subscribe(string(event.GetType()), hander.Handle)
+}
+
+func (bus *eventBusImpl) SubscribeAsync(event DomainEvent, hander Handler) error {
+	return bus.inner.SubscribeAsync(string(event.GetType()), hander.Handle, false)
+}
+
+func (bus *eventBusImpl) SubscribeOnce(event DomainEvent, hander Handler) error {
+	return bus.inner.SubscribeOnce(string(event.GetType()), hander.Handle)
+}
+
+func (bus *eventBusImpl) Unsubscribe(event DomainEvent, handler Handler) error {
+	return bus.inner.Unsubscribe(string(event.GetType()), handler.Handle)
 }

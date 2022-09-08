@@ -1,21 +1,14 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
+	"log"
 )
 
-type Server struct{}
-
 func main() {
-	router := gin.Default()
-	api := router.Group("api")
-	v1 := api.Group("v1")
-	setupV1Api(v1)
-	router.Run(":8080")
+	server, err := buildWebServer(context.TODO())
+	if err != nil {
+		log.Panicln("failed to build")
+	}
+	server.Run(":8080")
 }
-
-func setupV1Api(v1 *gin.RouterGroup) {
-	setupShoppingCart(v1)
-}
-
-func setupShoppingCart(v1 *gin.RouterGroup) {}

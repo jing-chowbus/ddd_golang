@@ -2,7 +2,6 @@ package event
 
 import (
 	"ddd/internal/shared/event"
-	"ddd/internal/shopping_cart/domain"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +12,7 @@ type ShoppingCartEvent interface {
 }
 
 type shoppingCartEventImpl struct {
+	eventType      event.EventType
 	shoppingCartID uuid.UUID
 	when           time.Time
 }
@@ -25,47 +25,33 @@ func (impl shoppingCartEventImpl) GetEventTime() time.Time {
 	return impl.when
 }
 
-var _ ShoppingCartEvent = NewEvent{}
-var _ ShoppingCartEvent = SaveEvent{}
-var _ ShoppingCartEvent = SaveSuccessEvent{}
-var _ ShoppingCartEvent = SaveFailedEvent{}
-var _ ShoppingCartEvent = CheckoutEvent{}
-var _ ShoppingCartEvent = CheckoutSuccessEvent{}
-var _ ShoppingCartEvent = CheckoutFailedEvent{}
+func (impl shoppingCartEventImpl) GetType() event.EventType {
+	return impl.eventType
+}
 
 type NewEvent struct {
 	shoppingCartEventImpl
-	ShoppingCart domain.ShoppingCart
 }
 
-func (NewEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.new")
-}
-
-func NewNewEvent(shoppingCart domain.ShoppingCart) NewEvent {
+func NewNewEvent(shoppingCartID uuid.UUID) NewEvent {
 	return NewEvent{
 		shoppingCartEventImpl: shoppingCartEventImpl{
-			shoppingCartID: shoppingCart.ID,
+			eventType:      "shopping_cart:new",
+			shoppingCartID: shoppingCartID,
 		},
-		ShoppingCart: shoppingCart,
 	}
 }
 
 type SaveEvent struct {
 	shoppingCartEventImpl
-	ShoppingCart domain.ShoppingCart
 }
 
-func (SaveEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.save")
-}
-
-func NewSaveEvent(shoppingCart domain.ShoppingCart) SaveEvent {
+func NewSaveEvent(shoppingCartID uuid.UUID) SaveEvent {
 	return SaveEvent{
 		shoppingCartEventImpl: shoppingCartEventImpl{
-			shoppingCartID: shoppingCart.ID,
+			eventType:      "shopping_cart:save",
+			shoppingCartID: shoppingCartID,
 		},
-		ShoppingCart: shoppingCart,
 	}
 }
 
@@ -73,13 +59,10 @@ type SaveSuccessEvent struct {
 	shoppingCartEventImpl
 }
 
-func (SaveSuccessEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.save.success")
-}
-
 func NewSaveSuccessEvent(shoppingCartID uuid.UUID) SaveSuccessEvent {
 	return SaveSuccessEvent{
 		shoppingCartEventImpl: shoppingCartEventImpl{
+			eventType:      "shopping_cart:save:success",
 			shoppingCartID: shoppingCartID,
 		},
 	}
@@ -90,13 +73,10 @@ type SaveFailedEvent struct {
 	err error
 }
 
-func (SaveFailedEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.save.failed")
-}
-
 func NewSaveFailedEvent(shoppingCartID uuid.UUID, err error) SaveFailedEvent {
 	return SaveFailedEvent{
 		shoppingCartEventImpl: shoppingCartEventImpl{
+			eventType:      "shopping_cart:save:failed",
 			shoppingCartID: shoppingCartID,
 		},
 		err: err,
@@ -105,19 +85,28 @@ func NewSaveFailedEvent(shoppingCartID uuid.UUID, err error) SaveFailedEvent {
 
 type CheckoutEvent struct {
 	shoppingCartEventImpl
-	ShoppingCart domain.ShoppingCart
 }
 
-func (CheckoutEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.checkout")
+func NewCheckoutEvent(shoppingCartID uuid.UUID) CheckoutEvent {
+	return CheckoutEvent{
+		shoppingCartEventImpl: shoppingCartEventImpl{
+			eventType:      "shopping_cart:checkout",
+			shoppingCartID: shoppingCartID,
+		},
+	}
 }
 
 type CheckoutSuccessEvent struct {
 	shoppingCartEventImpl
 }
 
-func (CheckoutSuccessEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.checkout.success")
+func NewCheckoutSuccessEvent(shoppingCartID uuid.UUID) CheckoutSuccessEvent {
+	return CheckoutSuccessEvent{
+		shoppingCartEventImpl: shoppingCartEventImpl{
+			eventType:      "shopping_cart:checkout:success",
+			shoppingCartID: shoppingCartID,
+		},
+	}
 }
 
 type CheckoutFailedEvent struct {
@@ -125,6 +114,19 @@ type CheckoutFailedEvent struct {
 	err error
 }
 
-func (CheckoutFailedEvent) GetType() event.EventType {
-	return event.EventType("shopping_cart.checkout.failed")
+func NewCheckoutFailedEvent(shoppingCartID uuid.UUID) CheckoutFailedEvent {
+	return CheckoutFailedEvent{
+		shoppingCartEventImpl: shoppingCartEventImpl{
+			eventType:      "shopping_cart:checkout:failed",
+			shoppingCartID: shoppingCartID,
+		},
+	}
 }
+
+var _ ShoppingCartEvent = NewEvent{}
+var _ ShoppingCartEvent = SaveEvent{}
+var _ ShoppingCartEvent = SaveSuccessEvent{}
+var _ ShoppingCartEvent = SaveFailedEvent{}
+var _ ShoppingCartEvent = CheckoutEvent{}
+var _ ShoppingCartEvent = CheckoutSuccessEvent{}
+var _ ShoppingCartEvent = CheckoutFailedEvent{}

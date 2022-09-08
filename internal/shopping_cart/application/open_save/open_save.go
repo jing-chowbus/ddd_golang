@@ -1,7 +1,6 @@
 package open_save
 
 import (
-	shared "ddd/internal/shared/event"
 	"ddd/internal/shopping_cart/domain"
 	"ddd/internal/shopping_cart/event"
 )
@@ -13,12 +12,16 @@ type OpenAndSave interface {
 
 type openAndSaveImpl struct {
 	shoppingCarts domain.ShoppingCarts
-	eventBus      shared.EventBus
+}
+
+func NewOpenAndSave(shoppingCarts domain.ShoppingCarts) OpenAndSave {
+	return &openAndSaveImpl{
+		shoppingCarts,
+	}
 }
 
 func (openAndSave *openAndSaveImpl) Open(command OpenCommand) domain.ShoppingCart {
 	shoppingCart := openAndSave.shoppingCarts.New()
-	openAndSave.eventBus.Notify(event.NewNewEvent(shoppingCart))
 	return shoppingCart
 }
 
@@ -30,9 +33,9 @@ func (openAndSave *openAndSaveImpl) Save(command SaveCommand) (domain.ShoppingCa
 	}
 	saved, err = openAndSave.shoppingCarts.Update(shoppingCart.Merge(saved))
 	if err != nil {
-		openAndSave.eventBus.Notify(event.NewSaveFailedEvent(saved.ID, err))
+		openAndSave.eventBus.Publish(event.NewSaveFailedEvent(saved.ID, err))
 		return saved, err
 	}
-	openAndSave.eventBus.Notify(event.NewSaveSuccessEvent(saved.ID))
+	openAndSave.eventBus.Publish(event.NewSaveSuccessEvent(saved.ID))
 	return saved, err
 }

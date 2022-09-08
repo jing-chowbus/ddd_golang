@@ -13,3 +13,10 @@ type DomainEvent interface {
 	GetEventTime() time.Time
 	GetType() EventType
 }
+
+func Is(event DomainEvent, target DomainEvent) bool {
+	if target == nil || event == nil {
+		return false
+	}
+	return event.GetType() == target.GetType()
+}
